@@ -4,7 +4,7 @@ CC=clang
 SRCS=$(wildcard *.c) elmchan/src/ff.c elmchan/src/diskio.c elmchan/src/option/unicode.c
 OBJS=$(patsubst %.c,%.o,$(SRCS))
 #LDFLAGS=
-CFLAGS=-g --std=c11 -MP -MMD
+CFLAGS=-g -O3 --std=c11 -MP -MMD
 all: $(BIN)
 
 %.o: %.cpp
@@ -21,6 +21,7 @@ $(BIN): $(OBJS)
 
 .PHONY: clean
 clean:
-	rm -f $(BIN) $(OBJS)
+	$(info [CLEAN])
+	@rm -f $(BIN) $(OBJS) $(OBJS:.o=.d)
 
 -include $(OBJS:.o=.d)

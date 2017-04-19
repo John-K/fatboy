@@ -3,7 +3,6 @@ CXX=clang++
 CC=clang
 SRCS=$(wildcard *.c) elmchan/src/ff.c elmchan/src/diskio.c elmchan/src/option/unicode.c
 OBJS=$(patsubst %.c,%.o,$(SRCS))
-#LDFLAGS=
 CFLAGS=-g -O3 --std=c11 -MP -MMD
 all: $(BIN)
 
@@ -11,7 +10,7 @@ all: $(BIN)
 	$(info [ CXX ] $<)
 	@$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-$.o: $.c
+%.o: %.c
 	$(info [ CC  ] $<)
 	@$(CC) -c -o $@ $< $(CFLAGS)
 

@@ -31,6 +31,7 @@ DSTATUS disk_status (
 		result = RAM_disk_status();
 
 		// translate the reslut code here
+		stat = result;
 
 		return stat;
 
@@ -38,6 +39,7 @@ DSTATUS disk_status (
 		result = MMC_disk_status();
 
 		// translate the reslut code here
+		stat = result;
 
 		return stat;
 
@@ -45,6 +47,7 @@ DSTATUS disk_status (
 		result = USB_disk_status();
 
 		// translate the reslut code here
+		stat = result;
 
 		return stat;
 	}
@@ -69,13 +72,14 @@ DSTATUS disk_initialize (
 		result = RAM_disk_initialize();
 
 		// translate the reslut code here
-
+		stat = result;
 		return stat;
 
 	case DEV_MMC :
 		result = MMC_disk_initialize();
 
 		// translate the reslut code here
+		stat = result;
 
 		return stat;
 
@@ -83,6 +87,7 @@ DSTATUS disk_initialize (
 		result = USB_disk_initialize();
 
 		// translate the reslut code here
+		stat = result;
 
 		return stat;
 	}
@@ -210,12 +215,14 @@ DRESULT disk_ioctl (
 	case DEV_MMC :
 
 		// Process of the command for the MMC/SD card
+		res = MMC_disk_ioctl(cmd, buff);
 
 		return res;
 
 	case DEV_USB :
 
 		// Process of the command the USB drive
+		res = USB_disk_ioctl(cmd, buff);
 
 		return res;
 	}

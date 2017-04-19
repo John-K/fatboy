@@ -23,14 +23,12 @@
 / (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 / SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /----------------------------------------------------------------------------*/
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include "elmchan_impl.h"
 #include "elmchan/src/diskio.h"
 
-// support the smallest sector size for maximal compatibility with underlying images
-#define FATBOY_SECTOR_SIZE 512
 static char image_path[4096];
 static FILE *image = NULL;
 static uint32_t image_size = 0;
@@ -43,7 +41,6 @@ fatboy_set_image(const char *path) {
 		return -1;
 	}
 
-	printf("opened '%s'\n", path);	
 	strncpy(image_path, path, sizeof(image_path));
 	image_path[sizeof(image_path)-1] = '\0';
 
@@ -80,6 +77,7 @@ get_fattime(void) {
 DSTATUS
 RAM_disk_initialize() {
 	if (!image) {
+		printf("ERR\n");
 		return STA_NOINIT;
 	}
 
@@ -158,11 +156,13 @@ RAM_disk_ioctl(BYTE cmd, void* buff) {
 // Unused
 DSTATUS
 MMC_disk_status(BYTE pdrv) {
+	printf("%s called!!!!\n", __FUNCTION__);
 	return STA_NOINIT;
 }
 
 DSTATUS
 MMC_disk_initialize(BYTE pdrv) {
+	printf("%s called!!!!\n", __FUNCTION__);
 	return STA_NOINIT;
 }
 
@@ -183,11 +183,13 @@ MMC_disk_ioctl(BYTE cmd, void* buff) {
 
 DSTATUS
 USB_disk_status(BYTE pdrv) {
+	printf("%s called!!!!\n", __FUNCTION__);
 	return STA_NOINIT;
 }
 
 DSTATUS
 USB_disk_initialize(BYTE pdrv) {
+	printf("%s called!!!!\n", __FUNCTION__);
 	return STA_NOINIT;
 }
 

@@ -34,34 +34,34 @@
 /  2: Enable with LF-CRLF conversion. */
 
 
-#define _USE_FIND		0
+#define _USE_FIND		2
 /* This option switches filtered directory read functions, f_findfirst() and
 /  f_findnext(). (0:Disable, 1:Enable 2:Enable with matching altname[] too) */
 
 
-#define	_USE_MKFS		0
+#define	_USE_MKFS		1
 /* This option switches f_mkfs() function. (0:Disable or 1:Enable) */
 
 
-#define	_USE_FASTSEEK	0
+#define	_USE_FASTSEEK	1
 /* This option switches fast seek function. (0:Disable or 1:Enable) */
 
 
-#define	_USE_EXPAND		0
+#define	_USE_EXPAND		1
 /* This option switches f_expand function. (0:Disable or 1:Enable) */
 
 
-#define _USE_CHMOD		0
+#define _USE_CHMOD		1
 /* This option switches attribute manipulation functions, f_chmod() and f_utime().
 /  (0:Disable or 1:Enable) Also _FS_READONLY needs to be 0 to enable this option. */
 
 
-#define _USE_LABEL		0
+#define _USE_LABEL		1
 /* This option switches volume label functions, f_getlabel() and f_setlabel().
 /  (0:Disable or 1:Enable) */
 
 
-#define	_USE_FORWARD	0
+#define	_USE_FORWARD	1
 /* This option switches f_forward() function. (0:Disable or 1:Enable) */
 
 
@@ -69,7 +69,7 @@
 / Locale and Namespace Configurations
 /---------------------------------------------------------------------------*/
 
-#define _CODE_PAGE	932
+#define _CODE_PAGE	437
 /* This option specifies the OEM code page to be used on the target system.
 /  Incorrect setting of the code page can cause a file open failure.
 /
@@ -98,7 +98,7 @@
 */
 
 
-#define	_USE_LFN	0
+#define	_USE_LFN	2
 #define	_MAX_LFN	255
 /* The _USE_LFN switches the support of long file name (LFN).
 /
@@ -134,7 +134,7 @@
 /  This option has no effect when _LFN_UNICODE == 0. */
 
 
-#define _FS_RPATH	0
+#define _FS_RPATH	2
 /* This option configures support of relative path.
 /
 /   0: Disable relative path and remove related functions.
@@ -152,7 +152,8 @@
 
 
 #define _STR_VOLUME_ID	0
-#define _VOLUME_STRS	"RAM","NAND","CF","SD","SD2","USB","USB2","USB3"
+#define _VOLUME_STRS	"RAM"
+//,"NAND","CF","SD","SD2","USB","USB2","USB3"
 /* _STR_VOLUME_ID switches string support of volume ID.
 /  When _STR_VOLUME_ID is set to 1, also pre-defined strings can be used as drive
 /  number in the path name. _VOLUME_STRS defines the drive ID strings for each
@@ -209,7 +210,7 @@
 /  buffer in the file system object (FATFS) is used for the file data transfer. */
 
 
-#define _FS_EXFAT	0
+#define _FS_EXFAT	1
 /* This option switches support of exFAT file system. (0:Disable or 1:Enable)
 /  When enable exFAT, also LFN needs to be enabled. (_USE_LFN >= 1)
 /  Note that enabling exFAT discards ANSI C (C89) compatibility. */

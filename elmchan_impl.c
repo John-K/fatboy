@@ -114,7 +114,7 @@ RAM_disk_ioctl(BYTE cmd, void* buff) {
 
 	switch (cmd) {
 		case CTRL_SYNC:
-			fsync(image);
+			fflush(image);
 			break;
 		case GET_SECTOR_COUNT:
 			printf("returning sector count %d\n", image_size / FATBOY_SECTOR_SIZE);

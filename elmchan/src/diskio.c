@@ -109,7 +109,7 @@ DRESULT disk_read (
 	case DEV_RAM :
 		// translate the arguments here
 
-		result = RAM_disk_read(buff, sector, count);
+		res = RAM_disk_read(buff, sector, count);
 
 		// translate the reslut code here
 
@@ -118,7 +118,7 @@ DRESULT disk_read (
 	case DEV_MMC :
 		// translate the arguments here
 
-		result = MMC_disk_read(buff, sector, count);
+		res = MMC_disk_read(buff, sector, count);
 
 		// translate the reslut code here
 
@@ -127,7 +127,7 @@ DRESULT disk_read (
 	case DEV_USB :
 		// translate the arguments here
 
-		result = USB_disk_read(buff, sector, count);
+		res = USB_disk_read(buff, sector, count);
 
 		// translate the reslut code here
 
@@ -157,7 +157,7 @@ DRESULT disk_write (
 	case DEV_RAM :
 		// translate the arguments here
 
-		result = RAM_disk_write(buff, sector, count);
+		res = RAM_disk_write(buff, sector, count);
 
 		// translate the reslut code here
 
@@ -166,7 +166,7 @@ DRESULT disk_write (
 	case DEV_MMC :
 		// translate the arguments here
 
-		result = MMC_disk_write(buff, sector, count);
+		res = MMC_disk_write(buff, sector, count);
 
 		// translate the reslut code here
 
@@ -175,7 +175,7 @@ DRESULT disk_write (
 	case DEV_USB :
 		// translate the arguments here
 
-		result = USB_disk_write(buff, sector, count);
+		res = USB_disk_write(buff, sector, count);
 
 		// translate the reslut code here
 
@@ -204,7 +204,7 @@ DRESULT disk_ioctl (
 	case DEV_RAM :
 
 		// Process of the command for the RAM drive
-
+		res = RAM_disk_ioctl(cmd, buff);
 		return res;
 
 	case DEV_MMC :

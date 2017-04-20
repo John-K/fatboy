@@ -135,7 +135,7 @@ int main(int argc, const char *argv[]) {
 	}
 
 	if (strcmp(action, "ls") == 0) {
-		char path[4096];
+		char path[4096] = ".";
 		if (argv[3]) {
 	       		strncpy(path, argv[3], sizeof path);
 		}

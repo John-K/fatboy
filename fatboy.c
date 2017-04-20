@@ -71,8 +71,11 @@ int main(int argc, const char *argv[]) {
 			goto exit;
 		}
 		res = f_unlink(path);
-		if (res != FR_OK) {
+		if (res == FR_OK) {
+			printf("Removed '%s'\n", path);
+		} else {
 			printf("Error %d unlinking '%s'\n", res, path);
+			exit_code = -1;
 		}
 	} else if (strcmp(action, "add") == 0) {
 		const char *host_file = argv[3];

@@ -23,7 +23,7 @@
 / (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 / SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /----------------------------------------------------------------------------*/
-##include <ctype.h>
+#include <ctype.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,9 +32,15 @@
 #include "elmchan/src/diskio.h"
 #include "elmchan/src/ff.h"
 
+struct FatType {
+	char *name;
+	BYTE id;
+};
+
+const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+const char* fat_types[] = {"None", "FAT-12", "FAT-16", "FAT-32", "ExFAT"};
+
 int main(int argc, const char *argv[]) {
-	const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-	const char* fat_types[] = {"None", "FAT-12", "FAT-16", "FAT-32", "ExFAT"};
 	const char *image_path = argv[1];
 	const char *action = argv[2];
 	FATFS fs;
@@ -67,40 +73,37 @@ int main(int argc, const char *argv[]) {
 		DWORD alloc_unit = 0;
 		uint8_t *work;
 		uint32_t work_len = 64 *1024;
-		char fat_lower[8] = {0};
-		char *fat_args[] = {"fat", "fat32", "exfat", "any"};
-		BYTE fat_type[] = {FM_FAT, FM_FAT32, FM_EXFAT, FM_ANY};
-		uint8_t fat_type_index = sizeof(fat_type) / sizeof(BYTE);;
-		BYTE fs_type = FM_ANY;
+		const char *fat_arg = argv[3];
+		const char *alloc_arg = argv[4];
+		struct FatType *selected = NULL;
+		struct FatType fat_types[] = {
+			{"any", FM_ANY} , {"fat", FM_FAT},
+			{"fat32", FM_FAT32}, {"exfat", FM_EXFAT},
+		};
 
 		if (argc > 3) {
-			for (int i = 0; i < sizeof(fat_lower) - 1; ++i) {
-				int ret = tolower((unsigned char)argv[3][i]);
-				fat_lower[i] = ret & 0xFF;
-			}
-
-			for (int i = 0; i < sizeof(fat_type) / sizeof(BYTE); ++i) {
-				if (strcmp(fat_lower, fat_args[i]) == 0) {
-					fs_type = fat_type[i];
-					fat_type_index = i;
+			for (int i = 0; i < sizeof(fat_types) / sizeof(struct FatType); ++i) {
+				if (strcmp(fat_arg, fat_types[i].name) == 0) {
+					selected = &fat_types[i];
 					break;
 				}
 			}
 
-			if (fat_type_index == 4) {
-				printf("Invalid fs type '%s'\n", argv[3]);
+			if (selected == NULL) {
+				printf("Invalid fs type '%s'\n", fat_arg);
 				exit_code = -1;
 				goto exit;
 			}
 		} else {
-			fat_type_index = 3;
+			// default to autodetect
+			selected = &fat_types[0];
 		}
 
 		if (argc > 4) {
-			alloc_unit = atoi(argv[4]);
-			printf("Creating a FS with type %s and allocation unit of %lu bytes\n", fat_args[fat_type_index], alloc_unit);
+			alloc_unit = atoi(alloc_arg);
+			printf("Creating FS of type %s and allocation unit of %lu bytes\n", selected->name, alloc_unit);
 		} else {
-			printf("Creating a FS with type %s and default allocation unit\n", fat_args[fat_type_index]);
+			printf("Creating FS of type %s and default allocation unit\n", selected->name);
 		}
 
 		work = malloc(work_len);
@@ -110,7 +113,7 @@ int main(int argc, const char *argv[]) {
 			goto exit;
 		}
 
-		res = f_mkfs("", fs_type, alloc_unit, work, work_len);
+		res = f_mkfs("", selected->id, alloc_unit, work, work_len);
 
 		free(work);
 		work = NULL;
@@ -142,24 +145,30 @@ int main(int argc, const char *argv[]) {
 		static FILINFO fno;
 
 		res = f_opendir(&dir, path);
-		if (res == FR_OK) {
-			for (;;) {
-				res = f_readdir(&dir, &fno);
-				if (res != FR_OK || fno.fname[0] == 0) {
-					break;  // Break on error or end of dir
-				}
-				printf("%c %10llu %s %d %d %02d:%02d %s/%s\n", fno.fattrib & AM_DIR ? 'd' : '-', fno.fsize, months[(fno.fdate >> 5) & 0xF], fno.fdate&0xF, (fno.fdate >> 9) + 1980, (fno.ftime>>11)&0xF, (fno.ftime>>5)&0x1F , path, fno.fname);
-			}
-			f_closedir(&dir);
-		} else {
-			printf("Couldn't open '%s' to list\n", path);
+		if (res != FR_OK) {
+			printf("'%s' not found\n", path);
+			exit_code = -1;
+			goto exit;
 		}
+		for (;;) {
+			res = f_readdir(&dir, &fno);
+			  // Break on error or end of dir
+			if (res != FR_OK || fno.fname[0] == 0) {
+				break;
+			}
+			printf("%c %10llu %s %d %d %02d:%02d %s/%s\n", (fno.fattrib & AM_DIR) ? 'd' : '-',
+					fno.fsize, months[(fno.fdate >> 5) & 0xF], fno.fdate & 0xF,
+					(fno.fdate >> 9) + 1980, (fno.ftime>>11) & 0xF,
+					(fno.ftime>>5) & 0x1F, path, fno.fname);
+		}
+		f_closedir(&dir);
+
 	} else if (strcmp(action, "rm") == 0) {
 		const char *path = argv[3];
 		FRESULT res;
 
 		if (!path) {
-			printf("Error: path to rm not specfied\n");
+			printf("Error: path argument to rm not specfied\n");
 			exit_code = -1;
 			goto exit;
 		}
@@ -167,9 +176,10 @@ int main(int argc, const char *argv[]) {
 		if (res == FR_OK) {
 			printf("Removed '%s'\n", path);
 		} else {
-			printf("Error %d unlinking '%s'\n", res, path);
+			printf("Error %d removing '%s'\n", res, path);
 			exit_code = -1;
 		}
+
 	} else if (strcmp(action, "add") == 0) {
 		const char *host_file = argv[3];
 		const char *fat_file = argv[4];
@@ -276,6 +286,7 @@ int main(int argc, const char *argv[]) {
 		}
 		fclose(out);
 		f_close(&fp);
+
 	} else if (strcmp(action, "info") == 0) {
 		FRESULT res;
 		TCHAR label[256];
@@ -297,6 +308,7 @@ int main(int argc, const char *argv[]) {
 			printf("Free space: %lu KiB\n", clusters * fatfs->csize * FATBOY_SECTOR_SIZE / 1024);
 			printf("Capacity:   %lu KiB\n", (fatfs->n_fatent -2) * fatfs->csize * FATBOY_SECTOR_SIZE / 1024);
 		}
+
 	} else if (strcmp(action, "mkdir") == 0) {
 		FRESULT res;
 		const char *path = argv[3];
@@ -314,6 +326,7 @@ int main(int argc, const char *argv[]) {
 			printf("Error %d creating directory '%s'\n", res, path);
 			exit_code = -1;
 		}
+
 	} else if (strcmp(action, "setlabel") == 0) {
 		FRESULT res;
 		const char *label = argv[3];
@@ -331,6 +344,7 @@ int main(int argc, const char *argv[]) {
 			printf("Error %d setting label '%s'\n", res, label);
 			exit_code = -1;
 		}
+
 	} else {
 		printf("Invalid action '%s'\n", action);
 	}

@@ -7,6 +7,7 @@
 
 int main(int argc, const char *argv[]) {
 	const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+	const char* fat_types[] = {"None", "FAT-12", "FAT-16", "FAT-32", "ExFAT"};
 	const char *image_path = argv[1];
 	const char *action = argv[2];
 	FATFS fs;
@@ -200,8 +201,9 @@ int main(int argc, const char *argv[]) {
 		if (res != FR_OK) {
 			printf("Error getting free space: %d\n", res);
 		} else {
-			printf("Free space: %lu bytes\n", clusters * fatfs->csize * FATBOY_SECTOR_SIZE);
-			printf("Capacity: %lu bytes\n", (fatfs->n_fatent -2) * fatfs->csize * FATBOY_SECTOR_SIZE);
+			printf("FS type: %s\n", fat_types[fatfs->fs_type]);
+			printf("Free space: %lu KiB\n", clusters * fatfs->csize * FATBOY_SECTOR_SIZE / 1024);
+			printf("Capacity:   %lu KiB\n", (fatfs->n_fatent -2) * fatfs->csize * FATBOY_SECTOR_SIZE / 1024);
 		}
 	} else if (strcmp(action, "mkdir") == 0) {
 		FRESULT res;

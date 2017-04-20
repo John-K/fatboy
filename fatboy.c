@@ -1,5 +1,7 @@
+#include <ctype.h>
 #include <libgen.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "elmchan_impl.h"
 #include "elmchan/src/diskio.h"
@@ -23,6 +25,7 @@ int main(int argc, const char *argv[]) {
 		printf("\textract <image_path> (<host_file>) - extract a file from the image to the specified file or current directory\n");
 		printf("\tinfo - print information about the image\n");
 		printf("\tmkdir <image_path> - make a directory\n");
+		printf("\tmkfs <fat, fat32, exfat, any> (<power of 2 allocation unit>) - make a new filesystem with an optional allocation unit size\n");
 		printf("\tsetlabel <label> - set FS label\n");
 		return -1;
 	}
@@ -33,6 +36,70 @@ int main(int argc, const char *argv[]) {
 		return -1;
 	}
 
+	// MKFS needs to hapen before we try and mount the partition
+	if (strcmp(action, "mkfs") == 0) {
+		FRESULT res;
+		DWORD alloc_unit = 0;
+		uint8_t *work;
+		uint32_t work_len = 64 *1024;
+		char fat_lower[8] = {0};
+		char *fat_args[] = {"fat", "fat32", "exfat", "any"};
+		BYTE fat_type[] = {FM_FAT, FM_FAT32, FM_EXFAT, FM_ANY};
+		uint8_t fat_type_index = sizeof(fat_type) / sizeof(BYTE);;
+		BYTE fs_type = FM_ANY;
+
+		if (argc > 3) {
+			for (int i = 0; i < sizeof(fat_lower) - 1; ++i) {
+				int ret = tolower((unsigned char)argv[3][i]);
+				fat_lower[i] = ret & 0xFF;
+			}
+
+			for (int i = 0; i < sizeof(fat_type) / sizeof(BYTE); ++i) {
+				if (strcmp(fat_lower, fat_args[i]) == 0) {
+					fs_type = fat_type[i];
+					fat_type_index = i;
+					break;
+				}
+			}
+
+			if (fat_type_index == 4) {
+				printf("Invalid fs type '%s'\n", argv[3]);
+				exit_code = -1;
+				goto exit;
+			}
+		} else {
+			fat_type_index = 3;
+		}
+
+		if (argc > 4) {
+			alloc_unit = atoi(argv[4]);
+			printf("Creating a FS with type %s and allocation unit of %lu bytes\n", fat_args[fat_type_index], alloc_unit);
+		} else {
+			printf("Creating a FS with type %s and default allocation unit\n", fat_args[fat_type_index]);
+		}
+
+		work = malloc(work_len);
+		if (!work) {
+			printf("Failed to allocate work buffer for mkfs\n");
+			exit_code = -1;
+			goto exit;
+		}
+
+		res = f_mkfs("", fs_type, alloc_unit, work, work_len);
+
+		free(work);
+		work = NULL;
+
+		if (res != FR_OK) {
+			printf("Filesystem creation failed with %d\n", res);
+			exit_code = -1;
+			goto exit;
+		}
+		// set action to info so we print out information about our new FS
+		action = "info";
+	}
+
+	// mount the partition for use by other commands
 	ret = f_mount(&fs, "", 1);
 	if (ret != FR_OK) {
 		printf("Error 0x%x mounting volume\n", ret);

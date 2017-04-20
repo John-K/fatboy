@@ -140,7 +140,6 @@ RAM_disk_ioctl(BYTE cmd, void* buff) {
 			fflush(image);
 			break;
 		case GET_SECTOR_COUNT:
-			printf("returning sector count %d\n", image_size / FATBOY_SECTOR_SIZE);
 			*ptrs.ptr_dword = image_size / FATBOY_SECTOR_SIZE;
 			break;
 		case GET_SECTOR_SIZE:

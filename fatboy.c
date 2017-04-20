@@ -37,8 +37,8 @@ struct FatType {
 	BYTE id;
 };
 
-const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-const char* fat_types[] = {"None", "FAT-12", "FAT-16", "FAT-32", "ExFAT"};
+static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+static const char* fatfs_names[] = {"None", "FAT-12", "FAT-16", "FAT-32", "ExFAT"};
 
 int main(int argc, const char *argv[]) {
 	const char *image_path = argv[1];
@@ -76,15 +76,15 @@ int main(int argc, const char *argv[]) {
 		const char *fat_arg = argv[3];
 		const char *alloc_arg = argv[4];
 		struct FatType *selected = NULL;
-		struct FatType fat_types[] = {
+		struct FatType fs_types[] = {
 			{"any", FM_ANY} , {"fat", FM_FAT},
 			{"fat32", FM_FAT32}, {"exfat", FM_EXFAT},
 		};
 
 		if (argc > 3) {
-			for (int i = 0; i < sizeof(fat_types) / sizeof(struct FatType); ++i) {
-				if (strcmp(fat_arg, fat_types[i].name) == 0) {
-					selected = &fat_types[i];
+			for (int i = 0; i < sizeof(fs_types) / sizeof(struct FatType); ++i) {
+				if (strcmp(fat_arg, fs_types[i].name) == 0) {
+					selected = &fs_types[i];
 					break;
 				}
 			}
@@ -96,11 +96,11 @@ int main(int argc, const char *argv[]) {
 			}
 		} else {
 			// default to autodetect
-			selected = &fat_types[0];
+			selected = &fs_types[0];
 		}
 
 		if (argc > 4) {
-			alloc_unit = atoi(alloc_arg);
+			alloc_unit = (DWORD)atoi(alloc_arg);
 			printf("Creating FS of type %s and allocation unit of %lu bytes\n", selected->name, alloc_unit);
 		} else {
 			printf("Creating FS of type %s and default allocation unit\n", selected->name);
@@ -141,7 +141,6 @@ int main(int argc, const char *argv[]) {
 		}
 		FRESULT res;
 		DIR dir;
-		UINT i;
 		static FILINFO fno;
 
 		res = f_opendir(&dir, path);
@@ -304,7 +303,7 @@ int main(int argc, const char *argv[]) {
 		if (res != FR_OK) {
 			printf("Error getting free space: %d\n", res);
 		} else {
-			printf("FS type: %s\n", fat_types[fatfs->fs_type]);
+			printf("FS type: %s\n", fatfs_names[fatfs->fs_type]);
 			printf("Free space: %lu KiB\n", clusters * fatfs->csize * FATBOY_SECTOR_SIZE / 1024);
 			printf("Capacity:   %lu KiB\n", (fatfs->n_fatent -2) * fatfs->csize * FATBOY_SECTOR_SIZE / 1024);
 		}

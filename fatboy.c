@@ -21,6 +21,7 @@ int main(int argc, const char *argv[]) {
 		printf("\tadd <host_file> (<image_path>) - add a file from the host to / or the specified image path\n");
 		printf("\textract <image_path> (<host_file>) - extract a file from the image to the specified file or current directory\n");
 		printf("\tinfo - print information about the image\n");
+		printf("\tsetlabel <label> - set FS label\n");
 		return -1;
 	}
 
@@ -197,6 +198,23 @@ int main(int argc, const char *argv[]) {
 		} else {
 			printf("Free space: %lu bytes\n", clusters * fatfs->csize * FATBOY_SECTOR_SIZE);
 			printf("Capacity: %lu bytes\n", (fatfs->n_fatent -2) * fatfs->csize * FATBOY_SECTOR_SIZE);
+		}
+	} else if (strcmp(action, "setlabel") == 0) {
+		FRESULT res;
+		const char *label = argv[3];
+
+		if (argc < 4 || !label) {
+			printf("Error: label was not specified\n");
+			exit_code = -1;
+			goto exit;
+		}
+
+		res = f_setlabel(label);
+		if (res == FR_OK) {
+			printf("Label set to '%s'\n", label);
+		} else {
+			printf("Error %d setting label '%s'\n", res, label);
+			exit_code = -1;
 		}
 	} else {
 		printf("Invalid action '%s'\n", action);

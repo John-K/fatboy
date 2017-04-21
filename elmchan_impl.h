@@ -28,5 +28,6 @@
 // support the smallest sector size for maximal compatibility with underlying images
 #define FATBOY_SECTOR_SIZE 512
 
+const char* fr_res_to_str(uint32_t fr_res);
 int32_t fatboy_set_image(const char *path);
 

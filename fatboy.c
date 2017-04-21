@@ -119,7 +119,7 @@ int main(int argc, const char *argv[]) {
 		work = NULL;
 
 		if (res != FR_OK) {
-			printf("Filesystem creation failed with %d\n", res);
+			printf("Filesystem creation failed: %s\n", fr_res_to_str(res));
 			exit_code = -1;
 			goto exit;
 		}
@@ -130,7 +130,7 @@ int main(int argc, const char *argv[]) {
 	// mount the partition for use by other commands
 	ret = f_mount(&fs, "", 1);
 	if (ret != FR_OK) {
-		printf("Error 0x%x mounting volume\n", ret);
+		printf("Error mounting volume: %s\n", fr_res_to_str(ret));
 		return -1;
 	}
 
@@ -145,7 +145,7 @@ int main(int argc, const char *argv[]) {
 
 		res = f_opendir(&dir, path);
 		if (res != FR_OK) {
-			printf("'%s' not found\n", path);
+			printf("'%s' not found (%s)\n", path, fr_res_to_str(res));
 			exit_code = -1;
 			goto exit;
 		}
@@ -175,7 +175,7 @@ int main(int argc, const char *argv[]) {
 		if (res == FR_OK) {
 			printf("Removed '%s'\n", path);
 		} else {
-			printf("Error %d removing '%s'\n", res, path);
+			printf("Error removing '%s': %s\n", path, fr_res_to_str(res));
 			exit_code = -1;
 		}
 
@@ -201,15 +201,17 @@ int main(int argc, const char *argv[]) {
 
 		res = f_open(&fp, fat_file, FA_WRITE|FA_CREATE_ALWAYS);
 		if (res != FR_OK) {
-			printf("Open failed with %d\n", res);
+			printf("Open failed: %s\n", fr_res_to_str(res));
 			exit_code = -1;
 			goto exit;
 			return -1;
 		}
 
+		//TODO: detect adding to a directory name and automatically fix
+
 		fin = fopen(host_file, "rb");
 		if (!fin) {
-			printf("couldn't open '%s' for writing\n", host_file);
+			printf("Error: couldn't open '%s' for reading\n", host_file);
 			exit_code = -1;
 			goto exit;
 			return -1;
@@ -256,7 +258,7 @@ int main(int argc, const char *argv[]) {
 
 		res = f_open(&fp, fat_file, FA_READ);
 		if (res != FR_OK) {
-			printf("Open failed with %d\n", res);
+			printf("Error: Open failed: %s\n", fr_res_to_str(res));
 			exit_code = -1;
 			goto exit;
 			return -1;
@@ -264,7 +266,7 @@ int main(int argc, const char *argv[]) {
 
 		out = fopen(host_file, "wb");
 		if (!out) {
-			printf("couldn't open '%s' for writing\n", host_file);
+			printf("Error: couldn't open '%s' for writing\n", host_file);
 			exit_code = -1;
 			goto exit;
 			return -1;
@@ -292,7 +294,7 @@ int main(int argc, const char *argv[]) {
 		DWORD vsn;
 		res = f_getlabel("", label, &vsn);
 		if (res != FR_OK) {
-			printf("Error getting label: %d\n", res);
+			printf("Error getting label: %s\n", fr_res_to_str(res));
 		} else {
 			printf("Label: '%s'\nSerial: 0x%08lX\n", label, vsn);
 		}
@@ -301,7 +303,7 @@ int main(int argc, const char *argv[]) {
 		FATFS *fatfs;
 		res = f_getfree("", &clusters, &fatfs);
 		if (res != FR_OK) {
-			printf("Error getting free space: %d\n", res);
+			printf("Error getting free space: %s\n", fr_res_to_str(res));
 		} else {
 			printf("FS type: %s\n", fatfs_names[fatfs->fs_type]);
 			printf("Free space: %lu KiB\n", clusters * fatfs->csize * FATBOY_SECTOR_SIZE / 1024);
@@ -322,7 +324,7 @@ int main(int argc, const char *argv[]) {
 		if (res == FR_OK) {
 			printf("Created '%s'\n", path);
 		} else {
-			printf("Error %d creating directory '%s'\n", res, path);
+			printf("Error creating directory '%s': %s\n", path, fr_res_to_str(res));
 			exit_code = -1;
 		}
 
@@ -340,7 +342,7 @@ int main(int argc, const char *argv[]) {
 		if (res == FR_OK) {
 			printf("Label set to '%s'\n", label);
 		} else {
-			printf("Error %d setting label '%s'\n", res, label);
+			printf("Error setting label to '%s': %s\n", label, fr_res_to_str(res));
 			exit_code = -1;
 		}
 

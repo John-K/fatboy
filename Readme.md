@@ -16,5 +16,8 @@ FatBoy supports the following actions:
  - setlabel
  - mkfs
 
+## Demo
+[![asciicast](https://asciinema.org/a/7xhyngal8knmvwdh4dn3ybkcz.png)](https://asciinema.org/a/7xhyngal8knmvwdh4dn3ybkcz)
+
 ## License
 FatBoy is licensed under the BSD license

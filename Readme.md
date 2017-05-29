@@ -11,6 +11,7 @@ FatBoy supports the following actions:
  - ls
  - add
  - extract
+ - extractdir
  - rm
  - info
  - setlabel

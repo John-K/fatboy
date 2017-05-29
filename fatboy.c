@@ -31,6 +31,7 @@
 #include "elmchan_impl.h"
 #include "elmchan/src/diskio.h"
 #include "elmchan/src/ff.h"
+#include "util.h"
 
 struct FatType {
 	char *name;
@@ -54,6 +55,7 @@ int main(int argc, const char *argv[]) {
 		printf("\trm <path> - remove a file from the image\n");
 		printf("\tadd <host_file> (<image_path>) - add a file from the host to / or the specified image path\n");
 		printf("\textract <image_path> (<host_file>) - extract a file from the image to the specified file or current directory\n");
+		printf("\textractdir <image_dir> (<host_dir>) - extract a directory from the image to the specified or current directory. Non-recursive.\n");
 		printf("\tinfo - print information about the image\n");
 		printf("\tmkdir <image_path> - make a directory\n");
 		printf("\tmkfs <fat, fat32, exfat, any> (<power of 2 allocation unit>) - make a new filesystem with an optional allocation unit size\n");
@@ -261,7 +263,6 @@ int main(int argc, const char *argv[]) {
 			printf("Error: Open failed: %s\n", fr_res_to_str(res));
 			exit_code = -1;
 			goto exit;
-			return -1;
 		}
 
 		out = fopen(host_file, "wb");
@@ -269,22 +270,13 @@ int main(int argc, const char *argv[]) {
 			printf("Error: couldn't open '%s' for writing\n", host_file);
 			exit_code = -1;
 			goto exit;
-			return -1;
 		}
 
-		for (;;) {
-			res = f_read(&fp, buffer, sizeof buffer, &bytes_read);
-			if (res != RES_OK || bytes_read == 0) {
-				exit_code = -1;
-				break;
-			}
-			bytes_wrote = fwrite(buffer, 1, bytes_read, out);
-			if (bytes_wrote< bytes_read) {
-				printf("Error: could only write %d bytes instead of %d\n", bytes_wrote, bytes_read);
-				exit_code = -1;
-				break;
-			}
+		exit_code = write_file(&fp, out);
+		if (exit_code != 0) {
+			goto exit;
 		}
+
 		fclose(out);
 		f_close(&fp);
 
@@ -346,6 +338,67 @@ int main(int argc, const char *argv[]) {
 			exit_code = -1;
 		}
 
+	}  else if(strcmp(action, "extractdir") == 0) {
+		char img_path[3072];
+		char host_path[3072];
+
+		strncpy(img_path, argv[3], sizeof img_path);
+
+		if (argv[4]) {
+			strncpy(host_path, argv[4], sizeof host_path);
+		} else {
+			strncpy(host_path, ".", sizeof host_path);
+		}
+
+		static FILINFO fno;
+		FRESULT res;
+		DIR dir;
+		FILE *out;
+		FIL fp;
+
+		res = f_opendir(&dir, img_path);
+		if (res == FR_OK) {
+			char img_fname[4096];
+			char host_fname[4096];
+			for (;;) {
+				res = f_readdir(&dir, &fno);
+				if (res != FR_OK || fno.fname[0] == 0 || fno.fattrib & AM_DIR) {
+					break;  // Break on error or end of dir
+				}
+
+				strncpy(img_fname, img_path, sizeof img_path);
+				strncat(img_fname, "/", 1);
+				strncat(img_fname, fno.fname, sizeof img_fname - sizeof img_path - 1);
+
+				strncpy(host_fname, host_path, sizeof host_fname);
+				strncat(host_fname, "/", 1);
+				strncat(host_fname, fno.fname, sizeof host_fname - sizeof host_path - 1);
+
+				printf("Extracting %s to %s\n", img_fname, host_fname);
+
+				res = f_open(&fp, img_fname, FA_READ);
+				if (res != FR_OK) {
+					printf("Open failed with %d\n", res);
+					exit_code = -1;
+					goto exit;
+				}
+
+				out = fopen(host_fname, "wb");
+				if (!out) {
+					printf("couldn't open '%s' for writing\n", host_fname);
+					exit_code = -1;
+					goto exit;
+				}
+
+				exit_code = write_file(&fp, out);
+				if (exit_code != 0) {
+					goto exit;
+				}
+			}
+			f_closedir(&dir);
+		} else {
+			printf("Couldn't open '%s' to list\n", img_path);
+		}
 	} else {
 		printf("Invalid action '%s'\n", action);
 	}

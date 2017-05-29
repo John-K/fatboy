@@ -1,6 +1,14 @@
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
+	CXX=clang++
+	CC=clang
+else
+	CXX=g++
+	CC=gcc
+endif
+
 BIN=fatboy
-CXX=clang++
-CC=clang
+
 SRCS=$(wildcard *.c) elmchan/src/ff.c elmchan/src/diskio.c elmchan/src/option/unicode.c
 OBJS=$(patsubst %.c,%.o,$(SRCS))
 CFLAGS=-g -O3 --std=c11 -MP -MMD

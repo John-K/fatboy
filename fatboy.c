@@ -362,8 +362,13 @@ int main(int argc, const char *argv[]) {
 			char host_fname[4096];
 			for (;;) {
 				res = f_readdir(&dir, &fno);
-				if (res != FR_OK || fno.fname[0] == 0 || fno.fattrib & AM_DIR) {
+
+				if (res != FR_OK || fno.fname[0] == 0) {
 					break;  // Break on error or end of dir
+				}
+
+				if (fno.fattrib & AM_DIR) {
+					continue; // Ignore directories
 				}
 
 				strncpy(img_fname, img_path, sizeof img_path);
